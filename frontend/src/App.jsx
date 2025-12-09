@@ -109,7 +109,7 @@ function App() {
 
         {!hideNavbar && (
           <footer className="bg-elviro-blue text-white text-center py-4 mt-auto">
-            <p className="mb-0">&copy; 2025 ELVIRO Solar Car Team.</p>
+            <p className="mb-0">&copy; 2025 ELVIRO Electric Prototype Car Team.</p>
           </footer>
         )}
       </div>
