@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Admin Dashboard</h2>
+
+<ul class="nav nav-tabs mb-4" id="adminTab" role="tablist">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pendaftar">Data Pendaftar</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tim">Kelola Tim</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#berita">Kelola Berita</a></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="pendaftar">
+        <a href="/admin/export" class="btn btn-success mb-3">Download Excel (.xlsx)</a>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr><th>Nama</th><th>NRP</th><th>Jurusan</th><th>CV</th></tr>
+                </thead>
+                <tbody>
+                    {% for a in applicants %}
+                    <tr>
+                        <td>{{ a.name }}</td>
+                        <td>{{ a.nrp }}</td>
+                        <td>{{ a.major }}</td>
+                        <td><a href="#">Lihat CV</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tim">
+        <form method="post" enctype="multipart/form-data" class="mb-4 border p-3 rounded">
+            <h5>Tambah Anggota Tim</h5>
+            <input type="hidden" name="add_team" value="1">
+            <div class="row">
+                <div class="col-md-3"><input type="text" name="name" class="form-control" placeholder="Nama" required></div>
+                <div class="col-md-3"><input type="text" name="position" class="form-control" placeholder="Jabatan" required></div>
+                <div class="col-md-2"><input type="text" name="period" class="form-control" placeholder="Periode (ex: 2024)" required></div>
+                <div class="col-md-3"><input type="file" name="photo" class="form-control" required></div>
+                <div class="col-md-1"><button class="btn btn-primary w-100">+</button></div>
+            </div>
+        </form>
+    </div>
+
+    <div class="tab-pane fade" id="berita">
+        <form method="post" class="border p-3 rounded">
+            <h5>Tulis Berita Baru</h5>
+            <input type="hidden" name="add_news" value="1">
+            <input type="text" name="title" class="form-control mb-2" placeholder="Judul Berita" required>
+            <textarea name="content" class="form-control mb-2" rows="4" placeholder="Isi berita..." required></textarea>
+            <button class="btn btn-primary">Posting Berita</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
