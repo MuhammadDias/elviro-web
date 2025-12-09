@@ -1,0 +1,196 @@
+/* --- 1. IMPORT FONT --- */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Titillium+Web:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
+
+/* --- 2. SETTING GLOBAL --- */
+:root {
+  --font-title: 'Rajdhani', sans-serif;
+  --font-body: 'Titillium Web', sans-serif;
+  --elviro-blue: #0f172a;
+  --elviro-yellow: #facc15;
+  --text-main: #f8fafc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  background-color: transparent !important;
+  font-family: var(--font-body);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- 3. TYPOGRAPHY --- */
+h1,
+h2,
+h3,
+h4,
+.navbar-brand {
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.navbar-brand {
+  font-style: italic;
+  font-size: 1.8rem;
+}
+
+p,
+span,
+li,
+.dropdown-item,
+.nav-link {
+  font-family: var(--font-body);
+}
+
+.nav-link {
+  text-transform: uppercase;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  font-size: 1rem;
+}
+
+/* --- 4. TOMBOL (ROUNDED) --- */
+.btn-elviro {
+  background-color: var(--elviro-yellow);
+  color: #000;
+  border: none;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  border-radius: 50px;
+  padding: 8px 30px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);
+}
+
+.btn-elviro:hover {
+  background-color: #eab308;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(250, 204, 21, 0.5);
+}
+
+/* --- 5. DROPDOWN MENU (FIXED) --- */
+
+/* Style Dasar (Container Dropdown) */
+.custom-dropdown .dropdown-menu {
+  background: rgba(15, 23, 42, 0.95); /* Biru Gelap Transparan */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+/* Style Dasar Item Dropdown (INI YANG TADI HILANG) */
+.dropdown-item {
+  color: rgba(255, 255, 255, 0.9) !important; /* <--- WAJIB PUTIH BIAR KELIHTAN */
+  padding: 12px 25px;
+  transition: 0.2s;
+  border-left: 0;
+  font-weight: 500;
+}
+
+/* Hover Item Dropdown (Biar kuning pas disentuh) */
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--elviro-yellow) !important;
+  padding-left: 30px; /* Geser dikit biar dinamis */
+}
+
+/* KHUSUS LAPTOP (>992px): Pake Hover Effect */
+@media (min-width: 992px) {
+  .custom-dropdown .dropdown-menu {
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+  }
+
+  .custom-dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+/* KHUSUS HP (<991px): Pake Klik & Posisi Statis */
+@media (max-width: 991px) {
+  .custom-dropdown .dropdown-menu {
+    position: static !important;
+    float: none;
+    width: 100%;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding-top: 0;
+    text-align: center;
+    transform: none !important;
+  }
+
+  .dropdown-item {
+    color: rgba(255, 255, 255, 0.6) !important; /* Sedikit redup di HP */
+  }
+
+  .dropdown-item:hover {
+    background: transparent;
+    color: var(--elviro-yellow) !important;
+    padding-left: 25px; /* Reset geseran di HP */
+  }
+}
+
+/* --- 6. UTILS --- */
+.bg-elviro-blue {
+  background-color: var(--elviro-blue) !important;
+}
+.text-elviro-yellow {
+  color: var(--elviro-yellow) !important;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- 7. TAMPILAN MOBILE NAV (PANEL KACA) --- */
+@media (max-width: 991px) {
+  .navbar-collapse {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(250, 204, 21, 0.2);
+    border-radius: 20px;
+    margin-top: 15px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .navbar-toggler {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transform: scale(1.1);
+  }
+
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(250, 204, 21, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='3' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  }
+
+  .navbar-nav .nav-link {
+    display: block;
+    padding: 10px;
+    border-radius: 50px;
+  }
+
+  .navbar-nav .nav-link:hover {
+    background: rgba(250, 204, 21, 0.1);
+    color: var(--elviro-yellow) !important;
+  }
+}
