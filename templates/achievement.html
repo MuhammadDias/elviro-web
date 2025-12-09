@@ -1,0 +1,71 @@
+{% extends 'base.html' %} {% block content %}
+<div class="position-relative py-5 mt-5" style="background: linear-gradient(135deg, var(--elviro-blue) 0%, #000 100%); color: white">
+  <div class="container py-4 text-center" data-aos="fade-down">
+    <h1 class="fw-bold text-warning display-4">TRACK RECORD</h1>
+    <p class="lead text-white-50">Jejak Prestasi Tim ELVIRO PENS</p>
+  </div>
+</div>
+
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="timeline-container position-relative">
+        <div class="timeline-line bg-secondary opacity-25" style="position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; transform: translateX(-50%); border-radius: 2px"></div>
+
+        {% for item in achievements %}
+        <div class="row mb-5 align-items-center {{ 'flex-row-reverse' if loop.index % 2 == 0 else '' }}" data-aos="fade-up" data-aos-delay="100">
+          <div class="col-md-5 text-md-end {{ 'text-md-start' if loop.index % 2 == 0 else '' }}">
+            <div class="card border-0 shadow-sm hover-card p-3" style="border-left: 5px solid var(--elviro-yellow) !important">
+              <h3 class="fw-bold text-primary m-0">{{ item.year }}</h3>
+              <h5 class="fw-bold mt-2">{{ item.event }}</h5>
+              <p class="mb-1 text-muted fw-bold">{{ item.category }}</p>
+              <span class="badge bg-warning text-dark fs-6">{{ item.result }}</span>
+            </div>
+          </div>
+
+          <div class="col-md-2 text-center position-relative py-3 py-md-0">
+            <div class="rounded-circle bg-warning border border-4 border-white shadow d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px; z-index: 2; position: relative">🏆</div>
+          </div>
+
+          <div class="col-md-5"></div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Responsive Timeline untuk Mobile */
+  @media (max-width: 767.98px) {
+    .timeline-line {
+      left: 25px !important;
+    }
+    .row.align-items-center {
+      flex-direction: row !important;
+    } /* Jangan dibalik di mobile */
+
+    /* Kolom Teks */
+    .col-md-5:first-child,
+    .col-md-5:last-child {
+      text-align: left !important;
+      padding-left: 60px;
+    }
+
+    /* Titik Tengah digeser ke kiri */
+    .col-md-2 {
+      position: absolute;
+      left: 0;
+      width: 50px;
+      padding: 0;
+      text-align: center;
+    }
+
+    /* Sisi kosong disembunyikan */
+    .col-md-5:empty {
+      display: none;
+    }
+  }
+</style>
+
+{% endblock %}

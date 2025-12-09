@@ -1,6 +1,6 @@
 venv/
-*.db
 __pycache__/
-uploads/
 *.pyc
-desktop.ini
+instance/
+.pytest_cache/
+.DS_Store

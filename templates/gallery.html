@@ -1,0 +1,21 @@
+{% extends 'base.html' %} {% block content %}
+<div class="py-5 mt-5" style="background: linear-gradient(135deg, var(--elviro-blue) 0%, #000 100%); color: white">
+  <div class="container py-4 text-center" data-aos="fade-down">
+    <h1 class="fw-bold text-warning display-4">OUR GALLERY</h1>
+    <p class="lead text-white-50">Momen Perjalanan Tim ELVIRO</p>
+  </div>
+</div>
+
+<div class="container my-5" style="min-height: 50vh">
+  <div id="react-gallery-root"></div>
+</div>
+
+<style>
+  .gallery-card:hover img {
+    transform: scale(1.05);
+    transition: 0.5s;
+  }
+</style>
+{% endblock %} {% block scripts %}
+<script type="text/babel" src="{{ url_for('static', filename='js/gallery_react.js') }}"></script>
+{% endblock %}
