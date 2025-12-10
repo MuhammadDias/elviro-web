@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom'; /* <--- KITA TAMBAH INI */
+import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 
 /* IMPORT BOOTSTRAP (Biar Hamburger Menu Jalan) */
@@ -11,7 +11,7 @@ import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* BUNGKUS APP DENGAN BROWSERROUTER */}
+    {/* TIDAK ADA STYLE/CLASS DENGAN BACKGROUND DI SINI */}
     <BrowserRouter>
       <App />
     </BrowserRouter>

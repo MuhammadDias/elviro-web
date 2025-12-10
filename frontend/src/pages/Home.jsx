@@ -6,41 +6,92 @@ import { Tilt } from 'react-tilt';
 import { Typewriter } from 'react-simple-typewriter';
 import CountUp from 'react-countup';
 
+import SpotlightCard from '../components/SpotlightCard';
+
+const API = 'http://127.0.0.1:5000';
+
+// --- KOMPONEN CARD BERITA (DENGAN SPOTLIGHT) ---
+const NewsCard = ({ newsItem, index }) => {
+  return (
+    <motion.div className="col-lg-4 col-md-6" initial={{ opacity: 0, y: 50 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-50px' }} transition={{ duration: 0.6, delay: index * 0.2 }}>
+      <Link to={`/news/${newsItem.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <SpotlightCard className="h-100 d-flex flex-column" spotlightColor="rgba(250, 204, 21, 0.15)">
+          {newsItem.thumbnail ? (
+            <div style={{ height: '220px', overflow: 'hidden', position: 'relative', borderTopLeftRadius: '1.5rem', borderTopRightRadius: '1.5rem' }}>
+              <img src={`${API}/uploads/news_thumb/${newsItem.thumbnail}`} className="w-100 h-100" style={{ objectFit: 'cover', transition: 'transform 0.5s' }} alt="News Thumb" />
+              <style>{`.card-spotlight:hover img { transform: scale(1.1); }`}</style>
+            </div>
+          ) : (
+            <div className="bg-secondary d-flex align-items-center justify-content-center" style={{ height: '150px', borderTopLeftRadius: '1.5rem', borderTopRightRadius: '1.5rem' }}>
+              <i className="bi bi-newspaper fs-1 text-white opacity-50"></i>
+            </div>
+          )}
+
+          <div className="card-body p-4 d-flex flex-column flex-grow-1">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <span className="badge bg-warning text-dark border border-warning rounded-pill px-3 fw-bold">
+                <i className="bi bi-calendar-event me-2"></i>
+                {newsItem.date}
+              </span>
+            </div>
+
+            <h4 className="card-title fw-bold mb-3 text-white" style={{ minHeight: '60px' }}>
+              {newsItem.title}
+            </h4>
+
+            <p className="card-text text-white-50 mb-4 flex-grow-1 small" style={{ lineHeight: '1.6' }}>
+              {newsItem.summary ? newsItem.summary : newsItem.content.substring(0, 100) + '...'}
+            </p>
+
+            <div className="d-flex gap-2 mt-auto pt-3 border-top border-secondary">
+              <span className="btn btn-sm text-warning fw-bold p-0 d-flex align-items-center">
+                BACA SELENGKAPNYA <i className="bi bi-arrow-right ms-2"></i>
+              </span>
+            </div>
+          </div>
+        </SpotlightCard>
+      </Link>
+    </motion.div>
+  );
+};
+
 export default function Home() {
   const [news, setNews] = useState([]);
   const [team, setTeam] = useState([]);
-  const API = 'http://127.0.0.1:5000'; // Koneksi ke Flask Backend
+  const API_HOME = 'http://127.0.0.1:5000';
 
   useEffect(() => {
-    axios.get(`${API}/api/news`).then((res) => setNews(res.data));
-    axios.get(`${API}/api/team`).then((res) => setTeam(res.data));
-    axios.get(`${API}/api/team?home=true`).then(res => setTeam(res.data));
+    axios
+      .get(`${API_HOME}/api/news`)
+      .then((res) => setNews(res.data))
+      .catch((error) => console.error('Failed to fetch news:', error));
+
+    axios
+      .get(`${API_HOME}/api/team?home=true`)
+      .then((res) => setTeam(res.data))
+      .catch((error) => console.error('Failed to fetch team:', error));
   }, []);
 
-  // Variabel Animasi
   const fadeInUp = {
     hidden: { opacity: 0, y: 40 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
   };
 
   return (
-    <div style={{ overflowX: 'hidden', backgroundColor: '#f8fafc' }}>
-      {/* =================================================================================
-               1. HERO SECTION (Dark Premium, Centered, No Image)
-               ================================================================================= */}
+    <div style={{ overflowX: 'hidden' }}>
+      {/* 1. HERO SECTION (TIDAK BERUBAH) */}
       <header
         className="position-relative text-white text-center"
         style={{
-          background: 'radial-gradient(circle at 50% 50%, rgb(15, 23, 42) 0%, rgb(2, 6, 23) 100%)',
+          background: 'transparent',
           minHeight: '95vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           paddingTop: '60px',
-          overflow: 'hidden',
+          overflow: 'visible',
         }}
       >
-        {/* Background Decoration (Glowing Orbs Animation) */}
         <motion.div
           animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
           transition={{ duration: 6, repeat: Infinity }}
@@ -58,25 +109,21 @@ export default function Home() {
           <div className="row justify-content-center">
             <div className="col-lg-10">
               <motion.div initial="hidden" animate="visible" variants={fadeInUp}>
-                {/* Badge */}
                 <div className="d-inline-block px-4 py-2 mb-4 border border-warning text-warning rounded-pill fw-bold bg-dark bg-opacity-50" style={{ letterSpacing: '2px', backdropFilter: 'blur(10px)' }}>
-                  ⚡ EEPIS ELECTRIC VEHICLE TEAM
+                  EEPIS ELECTRIC VEHICLE PROTOTYPE CONCEPT
                 </div>
 
-                {/* Main Headline */}
                 <h1 className="display-1 fw-bold mb-4" style={{ lineHeight: '1.1', textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
                   The Future is <br />
                   <span style={{ color: '#facc15' }}>
-                    <Typewriter words={['Electric.', 'Efficient.', 'Sustainable.', 'ELVIRO.']} loop={0} cursor cursorStyle="_" typeSpeed={70} deleteSpeed={50} delaySpeed={1000} />
+                    <Typewriter words={['Electric.', 'Efficient.', 'Sustainable.', 'ELVIRO.', 'Green ENERGY']} loop={0} cursor cursorStyle="_" typeSpeed={70} deleteSpeed={50} delaySpeed={1000} />
                   </span>
                 </h1>
 
-                {/* Subheadline */}
                 <p className="lead text-white-50 mb-5 mx-auto fs-4" style={{ maxWidth: '800px' }}>
                   We design and build high-efficiency <strong>Battery-Electric Prototypes</strong>. Pushing the boundaries of aerodynamics and energy management for a greener earth.
                 </p>
 
-                {/* Buttons */}
                 <div className="d-flex gap-3 justify-content-center flex-wrap">
                   <Link to="/join" className="btn btn-warning btn-lg px-5 py-3 rounded-pill fw-bold shadow-lg hover-scale text-dark border-0">
                     JOIN THE TEAM
@@ -90,7 +137,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll Down Indicator */}
         <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 1.5 }} className="position-absolute bottom-0 start-50 translate-middle-x mb-5 text-white text-center opacity-50">
           <small className="ls-2">SCROLL DOWN</small>
           <br />
@@ -98,9 +144,7 @@ export default function Home() {
         </motion.div>
       </header>
 
-      {/* =================================================================================
-               2. STATS SECTION (Counter Up)
-               ================================================================================= */}
+      {/* 2. STATS SECTION (TIDAK BERUBAH) */}
       <div className="bg-white py-5 shadow-sm position-relative" style={{ marginTop: '-40px', zIndex: 10, borderRadius: '40px 40px 0 0' }}>
         <div className="container">
           <div className="row text-center g-4">
@@ -122,9 +166,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* =================================================================================
-               3. WHO WE ARE (Centered Text Card, No Side Images)
-               ================================================================================= */}
+      {/* 3. WHO WE ARE (TIDAK BERUBAH) */}
       <section className="py-5 bg-light">
         <div className="container py-5">
           <div className="row justify-content-center text-center">
@@ -136,7 +178,6 @@ export default function Home() {
               </h2>
 
               <div className="bg-white p-5 rounded-5 shadow-sm border-top border-5 border-warning position-relative overflow-hidden">
-                {/* Decorative BG Icon */}
                 <i className="bi bi-lightning-charge-fill position-absolute text-light" style={{ fontSize: '20rem', top: '-50px', right: '-50px', opacity: 0.1, transform: 'rotate(15deg)' }}></i>
 
                 <p className="text-dark lead mb-4 position-relative z-1">
@@ -171,61 +212,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =================================================================================
-               4. LATEST NEWS (Interactive Cards with Docs & Thumbnails)
-               ================================================================================= */}
+      {/* 4. LATEST NEWS (UPDATED DENGAN SPOTLIGHT CARD & LINK DETAIL) */}
       <section className="py-5 my-5">
         <div className="container">
           <div className="text-center mb-5" data-aos="fade-up">
             <h6 className="text-warning fw-bold text-uppercase">Updates</h6>
-            <h2 className="fw-bold text-dark display-5">Latest News & Activity</h2>
+            <h2 className="fw-bold text display-5">Latest News & Activity</h2>
           </div>
 
           <div className="row g-4 justify-content-center">
             {news.length > 0 ? (
-              news.map((n, idx) => (
-                <div className="col-lg-4 col-md-6" key={n.id} data-aos="fade-up" data-aos-delay={idx * 100}>
-                  <Tilt options={{ max: 5, scale: 1.02, speed: 1000 }}>
-                    <div className="card h-100 border-0 shadow-sm hover-card" style={{ borderRadius: '20px', overflow: 'hidden', background: '#fff' }}>
-                      {/* Thumbnail Image */}
-                      {n.thumbnail ? (
-                        <div style={{ height: '200px', overflow: 'hidden' }}>
-                          <img src={`${API}/uploads/news_thumb/${n.thumbnail}`} className="w-100 h-100" style={{ objectFit: 'cover' }} alt="News Thumb" />
-                        </div>
-                      ) : (
-                        <div className="bg-light d-flex align-items-center justify-content-center" style={{ height: '150px' }}>
-                          <i className="bi bi-newspaper fs-1 text-muted opacity-25"></i>
-                        </div>
-                      )}
-
-                      <div className="card-body p-4 d-flex flex-column">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <span className="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">{n.date}</span>
-                        </div>
-
-                        <h4 className="card-title fw-bold mb-3 text-dark">{n.title}</h4>
-                        <p className="card-text text-muted mb-4 flex-grow-1 small" style={{ lineHeight: '1.6' }}>
-                          {n.content.substring(0, 100)}...
-                        </p>
-
-                        {/* Action Buttons (Download & Link) */}
-                        <div className="d-flex gap-2 mt-auto pt-3 border-top border-light">
-                          {n.document && (
-                            <a href={`${API}/uploads/news_doc/${n.document}`} className="btn btn-sm btn-outline-primary flex-fill rounded-pill" download>
-                              <i className="bi bi-file-earmark-arrow-down me-1"></i> Download Doc
-                            </a>
-                          )}
-                          {n.link && (
-                            <a href={n.link} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-dark flex-fill rounded-pill">
-                              <i className="bi bi-link-45deg me-1"></i> Visit Link
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Tilt>
-                </div>
-              ))
+              news.slice(0, 3).map((item, idx) => <NewsCard key={item.id} newsItem={item} index={idx} />)
             ) : (
               <div className="col-12 text-center py-5">
                 <div className="p-5 bg-light rounded-4 d-inline-block">
@@ -238,9 +235,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =================================================================================
-               5. TEAM SECTION (Full Details: NRP, Major, etc)
-               ================================================================================= */}
+      {/* 5. TEAM SECTION (TIDAK BERUBAH) */}
       <section className="py-5 text-white" style={{ background: '#0f172a' }}>
         <div className="container py-5">
           <div className="text-center mb-5" data-aos="zoom-in">
@@ -256,14 +251,13 @@ export default function Home() {
                 <div className="card border-0 text-center h-100 bg-transparent team-card group">
                   <div className="position-relative d-inline-block mx-auto mb-3">
                     <motion.div whileHover={{ scale: 1.1 }} className="rounded-circle p-1" style={{ background: 'linear-gradient(45deg, #facc15, #00d4ff)' }}>
-                      <img src={`${API}/uploads/team/${t.photo}`} className="rounded-circle border border-4 border-dark" style={{ width: '150px', height: '150px', objectFit: 'cover' }} alt={t.name} />
+                      <img src={`${API_HOME}/uploads/team/${t.photo}`} className="rounded-circle border border-4 border-dark" style={{ width: '150px', height: '150px', objectFit: 'cover' }} alt={t.name} />
                     </motion.div>
                   </div>
 
                   <h5 className="fw-bold mb-1 text-white">{t.name}</h5>
                   <p className="small text-warning fw-bold text-uppercase ls-1 mb-2">{t.position}</p>
 
-                  {/* Detailed Info Badge */}
                   <div className="bg-white bg-opacity-10 p-3 rounded-3 mt-2 mx-auto" style={{ maxWidth: '250px', backdropFilter: 'blur(5px)' }}>
                     <div className="small text-white-50 mb-1">{t.major}</div>
                     <div className="fw-bold text-white small" style={{ fontSize: '0.85rem' }}>
@@ -277,12 +271,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =================================================================================
-               6. CTA SECTION
-               ================================================================================= */}
+      {/* 6. CTA SECTION (TIDAK BERUBAH) */}
       <section className="py-5 text-center position-relative overflow-hidden">
         <div className="position-absolute top-0 start-0 w-100 h-100 bg-warning" style={{ opacity: 0.95 }}></div>
-        {/* Texture Pattern */}
         <div className="position-absolute top-0 start-0 w-100 h-100" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px', opacity: 0.1 }}></div>
 
         <div className="container position-relative z-2 py-5" data-aos="fade-up">
@@ -296,14 +287,14 @@ export default function Home() {
 
       {/* --- INLINE STYLES --- */}
       <style>{`
-                .ls-1 { letter-spacing: 1px; }
-                .ls-2 { letter-spacing: 2px; }
-                .hover-scale:hover { transform: scale(1.05); transition: 0.3s; }
-                .hover-card { transition: all 0.3s ease; }
-                .hover-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important; }
-                .backdrop-blur { backdrop-filter: blur(10px); }
-                .text-elviro-blue { color: #0f172a; }
-            `}</style>
+          .ls-1 { letter-spacing: 1px; }
+          .ls-2 { letter-spacing: 2px; }
+          .hover-scale:hover { transform: scale(1.05); transition: 0.3s; }
+          .hover-card { transition: all 0.3s ease; }
+          .hover-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important; }
+          .backdrop-blur { backdrop-filter: blur(10px); }
+          .text-elviro-blue { color: #0f172a; }
+      `}</style>
     </div>
   );
 }

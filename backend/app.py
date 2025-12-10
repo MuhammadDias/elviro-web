@@ -55,6 +55,7 @@ class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200))
     content = db.Column(db.Text)
+    summary = db.Column(db.String(300), nullable=True) # KOLOM BARU: RINGKASAN
     date = db.Column(db.DateTime, default=datetime.utcnow)
     thumbnail = db.Column(db.String(200))
     document = db.Column(db.String(200))
@@ -90,7 +91,6 @@ def get_team():
     else: team = Team.query.order_by(Team.period.desc()).all()
     return jsonify([{ 'id': t.id, 'name': t.name, 'position': t.position, 'photo': t.photo, 'nrp': t.nrp, 'major': t.major, 'batch': t.batch, 'period': t.period, 'show_on_home': t.show_on_home } for t in team])
 
-# UPDATE TEAM (BARU)
 @app.route('/api/admin/team/update', methods=['POST'])
 def update_team():
     try:
@@ -157,21 +157,83 @@ def delete_achievement(id):
     if a: db.session.delete(a); db.session.commit(); return jsonify({'success': True})
     return jsonify({'error': 'Not found'}), 404
 
-# ... (Route News, Gallery, Config, Join, Login, Upload, Export SAMA SEPERTI SEBELUMNYA) ...
-# Agar tidak kepanjangan, saya paste yang penting saja. Pastikan route lain tetap ada.
-@app.route('/api/news')
-def get_news():
+# --- API NEWS (GET, DETAIL, UPDATE, DELETE) ---
+
+@app.route('/api/news', methods=['GET'])
+def get_news_list():
+    # Ambil semua berita
     news = News.query.order_by(News.date.desc()).all()
-    return jsonify([{'id': n.id, 'title': n.title, 'content': n.content, 'date': n.date.strftime('%d %B %Y'), 'thumbnail': n.thumbnail, 'document': n.document, 'link': n.link} for n in news])
+    return jsonify([{
+        'id': n.id, 'title': n.title, 
+        'summary': n.summary, # Penting untuk Home
+        'content': n.content,
+        'date': n.date.strftime('%d %B %Y'), 
+        'thumbnail': n.thumbnail, 
+        'document': n.document, 
+        'link': n.link
+    } for n in news])
+
+@app.route('/api/news/<int:id>', methods=['GET'])
+def get_news_detail(id):
+    n = News.query.get(id)
+    if not n: return jsonify({'error': 'Not Found'}), 404
+    return jsonify({
+        'id': n.id, 'title': n.title, 'content': n.content, 
+        'summary': n.summary,
+        'date': n.date.strftime('%d %B %Y'), 
+        'thumbnail': n.thumbnail, 'document': n.document, 'link': n.link
+    })
+
+@app.route('/api/admin/news/update', methods=['POST'])
+def update_news():
+    try:
+        n = News.query.get(request.form['id'])
+        if not n: return jsonify({'error': 'Not Found'}), 404
+        
+        n.title = request.form['title']
+        n.summary = request.form.get('summary', '') # Update summary juga
+        n.content = request.form['content']
+        n.link = request.form['link']
+        
+        if 'thumbnail' in request.files:
+            t = request.files['thumbnail']
+            if t.filename != '':
+                t.save(os.path.join(app.config['UPLOAD_FOLDER'], 'news_thumb', t.filename))
+                n.thumbnail = t.filename
+        
+        if 'document' in request.files:
+            d = request.files['document']
+            if d.filename != '':
+                d.save(os.path.join(app.config['UPLOAD_FOLDER'], 'news_doc', d.filename))
+                n.document = d.filename
+
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/news/delete/<int:id>', methods=['DELETE'])
+def delete_news(id):
+    n = News.query.get(id)
+    if n: 
+        db.session.delete(n)
+        db.session.commit()
+        return jsonify({'success': True})
+    return jsonify({'error': 'Not found'}), 404
+
+# --- END API NEWS ---
+
 @app.route('/api/gallery/events')
 def get_events(): return jsonify([{'id': e.id, 'title': e.title, 'year': e.year, 'location': e.location, 'thumbnail': e.thumbnail} for e in GalleryEvent.query.all()])
+
 @app.route('/api/gallery/photos/<int:id>')
 def get_photos(id): return jsonify([{'photo': p.photo} for p in GalleryPhoto.query.filter_by(event_id=id).all()])
+
 @app.route('/api/config')
 def get_config():
     c = RecruitmentConfig.query.first()
     if not c: return jsonify({'is_open': False})
     return jsonify({'is_open': c.start_date <= date.today() <= c.end_date, 'start': c.start_date.strftime('%Y-%m-%d'), 'end': c.end_date.strftime('%Y-%m-%d'), 'message': c.closed_message})
+
 @app.route('/api/join', methods=['POST'])
 def join():
     try:
@@ -179,29 +241,54 @@ def join():
         db.session.add(Applicant(name=d['name'], nrp=d['nrp'], major=d['major'], department=d['department'], batch=d['batch'], email=d['email'], phone=d['phone'], height=int(d['height']), weight=int(d['weight']), cv_path=fn, portfolio_link=d['portfolio']))
         db.session.commit(); return jsonify({'message': 'Ok'})
     except Exception as e: return jsonify({'error': str(e)}), 500
+
 @app.route('/api/admin/config', methods=['POST'])
 def update_config():
     d = request.json; c = RecruitmentConfig.query.first(); s = datetime.strptime(d['start_date'], '%Y-%m-%d').date(); e = datetime.strptime(d['end_date'], '%Y-%m-%d').date()
     if not c: db.session.add(RecruitmentConfig(start_date=s, end_date=e, closed_message=d['message']))
     else: c.start_date = s; c.end_date = e; c.closed_message = d['message']
     db.session.commit(); return jsonify({'success': True})
+
 @app.route('/api/applicants')
 def get_applicants():
     apps = Applicant.query.order_by(Applicant.created_at.desc()).all()
-    return jsonify([{ 'name': a.name, 'nrp': a.nrp, 'major': a.major, 'department': a.department, 'batch': a.batch, 'email': a.email, 'phone': a.phone, 'height': a.height, 'weight': a.weight, 'cv_path': a.cv_path, 'portfolio': a.portfolio_link, 'date': a.created_at.strftime('%d-%m-%Y')} for a in apps])
+    return jsonify([{ 'id': a.id, 'name': a.name, 'nrp': a.nrp, 'major': a.major, 'department': a.department, 'batch': a.batch, 'email': a.email, 'phone': a.phone, 'height': a.height, 'weight': a.weight, 'cv_path': a.cv_path, 'portfolio': a.portfolio_link, 'date': a.created_at.strftime('%d-%m-%Y')} for a in apps])
+
+@app.route('/api/admin/applicant/delete/<int:id>', methods=['DELETE'])
+def delete_applicant(id):
+    a = Applicant.query.get(id)
+    if a: db.session.delete(a); db.session.commit(); return jsonify({'success': True})
+    return jsonify({'error': 'Not found'}), 404
+
 @app.route('/api/login', methods=['POST'])
 def login(): return jsonify({'success': True}) if request.json['username']=='admin' and request.json['password']=='elviro123' else jsonify({'success': False}), 401
+
 @app.route('/admin/upload', methods=['POST'])
 def admin_upload():
     try:
         if 'add_team' in request.form:
             p = request.files['photo']; p.save(os.path.join(app.config['UPLOAD_FOLDER'], 'team', p.filename))
             db.session.add(Team(name=request.form['name'], position=request.form['position'], period=request.form['period'], photo=p.filename, nrp=request.form['nrp'], major=request.form['major'], batch=request.form['batch']))
+        
         elif 'add_news' in request.form:
             t = request.files.get('thumbnail'); d = request.files.get('document'); tn = t.filename if t else None; dn = d.filename if d else None
             if t: t.save(os.path.join(app.config['UPLOAD_FOLDER'], 'news_thumb', tn))
             if d: d.save(os.path.join(app.config['UPLOAD_FOLDER'], 'news_doc', dn))
-            db.session.add(News(title=request.form['title'], content=request.form['content'], thumbnail=tn, document=dn, link=request.form['link']))
+            
+            # FITUR BARU: GENERATE SUMMARY OTOMATIS JIKA KOSONG
+            # Ambil 150 karakter pertama dari konten untuk summary
+            content_text = request.form['content']
+            summary_text = content_text[:150] + "..." if len(content_text) > 150 else content_text
+            
+            db.session.add(News(
+                title=request.form['title'], 
+                content=content_text, 
+                summary=summary_text, # Simpan summary
+                thumbnail=tn, 
+                document=dn, 
+                link=request.form['link']
+            ))
+            
         elif 'add_event' in request.form:
             t = request.files['thumbnail']; t.save(os.path.join(app.config['UPLOAD_FOLDER'], 'gallery_thumb', t.filename))
             db.session.add(GalleryEvent(title=request.form['title'], year=request.form['year'], location=request.form['location'], thumbnail=t.filename))
@@ -213,8 +300,10 @@ def admin_upload():
             db.session.add(Achievement(year=int(request.form['year']), event=request.form['event'], category=request.form['category'], result=request.form['result'], description=request.form['description'], photo=photo.filename))
         db.session.commit(); return jsonify({'success': True})
     except Exception as e: return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/uploads/<path:filename>')
 def serve_uploads(filename): return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 @app.route('/api/admin/export')
 def export_excel():
     applicants = Applicant.query.order_by(Applicant.created_at.desc()).all()
@@ -241,7 +330,6 @@ def seed_data():
             {"year": 2012, "event": "IEMC 2012", "category": "Urban Listrik", "result": "Runner Up", "desc": "Prestasi awal tim ELVIRO (Chapens)."}
         ]
         for d in data:
-            # Gunakan foto default jika belum ada upload
             db.session.add(Achievement(year=d['year'], event=d['event'], category=d['category'], result=d['result'], description=d['desc'], photo="default.jpg"))
     db.session.commit()
 

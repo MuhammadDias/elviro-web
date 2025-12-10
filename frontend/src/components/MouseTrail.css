@@ -1,0 +1,19 @@
+/* frontend/src/components/MouseTrail.css */
+
+.mouse-trail-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Warna Elviro Yellow */
+  background-color: var(--elviro-yellow, #facc15);
+  border-radius: 50%;
+
+  /* Z-Index di atas background tapi di bawah konten utama */
+  z-index: 10;
+
+  /* Atur kecepatan transisi, ini kunci smooth trailing effect */
+  transition: transform 0.05s ease-out, width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+
+  /* Penting: JANGAN ganggu klik pada tombol */
+  pointer-events: none;
+}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+
+const API = 'http://127.0.0.1:5000';
 
 export default function Login() {
   const [input, setInput] = useState({ username: '', password: '' });
@@ -9,21 +11,18 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://127.0.0.1:5000/api/login', input);
+      const res = await axios.post(`${API}/api/login`, input);
       if (res.data.success) {
-        // Simpan status login di LocalStorage browser
-        localStorage.setItem('isAdmin', 'true');
+        localStorage.setItem('isAdmin', 'true'); // Simpan status login
         navigate('/admin');
-      } else {
-        alert('Password Salah!');
       }
     } catch (error) {
-      alert('Gagal Login. Cek Username/Password.');
+      alert(error.response?.data?.message || 'Login Gagal. Cek koneksi server.');
     }
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center vh-100 bg-light">
+    <div className="d-flex align-items-center justify-content-center vh-100 bg-elviro-blue">
       <div className="card shadow border-0 p-4" style={{ maxWidth: '400px', width: '100%' }}>
         <h3 className="text-center fw-bold mb-4 text-elviro-blue">Admin Login</h3>
         <form onSubmit={handleLogin}>
@@ -36,9 +35,15 @@ export default function Login() {
             <input type="password" className="form-control" onChange={(e) => setInput({ ...input, password: e.target.value })} required />
           </div>
           <button className="btn btn-elviro w-100 py-2">MASUK</button>
-          <a href="/" className="d-block text-center mt-3 text-muted small text-decoration-none">
-            Kembali ke Home
-          </a>
+
+          <div className="text-center mt-3 d-flex flex-column gap-2">
+            <small>
+              Belum punya akun? <Link to="/signup">Daftar Admin</Link>
+            </small>
+            <Link to="/" className="text-muted small text-decoration-none">
+              &larr; Kembali ke Home
+            </Link>
+          </div>
         </form>
       </div>
     </div>

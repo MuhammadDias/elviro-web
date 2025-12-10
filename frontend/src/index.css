@@ -7,7 +7,7 @@
   --font-body: 'Titillium Web', sans-serif;
   --elviro-blue: #0f172a;
   --elviro-yellow: #facc15;
-  --text-main: #f8fafc;
+  --text-main: #facc15;
 }
 
 body {
@@ -16,7 +16,8 @@ body {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
-  background-color: transparent !important;
+  /* INI YANG MENGEMBALIKAN WARNA GELAP */
+  background-color: #0f172a !important;
   font-family: var(--font-body);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
@@ -75,11 +76,9 @@ li,
   box-shadow: 0 8px 25px rgba(250, 204, 21, 0.5);
 }
 
-/* --- 5. DROPDOWN MENU (FIXED) --- */
-
-/* Style Dasar (Container Dropdown) */
+/* --- 5. DROPDOWN MENU --- */
 .custom-dropdown .dropdown-menu {
-  background: rgba(15, 23, 42, 0.95); /* Biru Gelap Transparan */
+  background: rgba(15, 23, 42, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 15px;
   overflow: hidden;
@@ -88,21 +87,19 @@ li,
   margin-top: 10px;
 }
 
-/* Style Dasar Item Dropdown (INI YANG TADI HILANG) */
 .dropdown-item {
-  color: rgba(255, 255, 255, 0.9) !important; /* <--- WAJIB PUTIH BIAR KELIHTAN */
+  color: rgba(255, 255, 255, 0.9) !important;
   padding: 12px 25px;
   transition: 0.2s;
   border-left: 0;
   font-weight: 500;
 }
 
-/* Hover Item Dropdown (Biar kuning pas disentuh) */
 .dropdown-item:hover,
 .dropdown-item:focus {
   background: rgba(255, 255, 255, 0.1);
   color: var(--elviro-yellow) !important;
-  padding-left: 30px; /* Geser dikit biar dinamis */
+  padding-left: 30px;
 }
 
 /* KHUSUS LAPTOP (>992px): Pake Hover Effect */
@@ -121,7 +118,7 @@ li,
   }
 }
 
-/* KHUSUS HP (<991px): Pake Klik & Posisi Statis */
+/* KHUSUS HP (<991px) */
 @media (max-width: 991px) {
   .custom-dropdown .dropdown-menu {
     position: static !important;
@@ -136,17 +133,17 @@ li,
   }
 
   .dropdown-item {
-    color: rgba(255, 255, 255, 0.6) !important; /* Sedikit redup di HP */
+    color: rgba(255, 255, 255, 0.6) !important;
   }
 
   .dropdown-item:hover {
     background: transparent;
     color: var(--elviro-yellow) !important;
-    padding-left: 25px; /* Reset geseran di HP */
+    padding-left: 25px;
   }
 }
 
-/* --- 6. UTILS --- */
+/* --- 6. UTILS (FIX TERAKHIR) --- */
 .bg-elviro-blue {
   background-color: var(--elviro-blue) !important;
 }
@@ -156,7 +153,21 @@ li,
 
 #root {
   position: relative;
-  z-index: 1;
+  z-index: 50;
+  background-color: transparent !important;
+}
+
+/* FIX UNTUK CLIPPING */
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+html,
+body,
+#root {
+  overflow: visible !important;
+  height: 100%;
+  width: 100%;
 }
 
 /* --- 7. TAMPILAN MOBILE NAV (PANEL KACA) --- */

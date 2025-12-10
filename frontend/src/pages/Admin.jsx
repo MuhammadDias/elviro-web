@@ -13,6 +13,9 @@ export default function Admin() {
   const [achievements, setAchievements] = useState([]);
   const [config, setConfig] = useState({ start_date: '', end_date: '', message: '' });
 
+  // STATE BARU: NEWS
+  const [newsList, setNewsList] = useState([]);
+
   // --- STATE FILTER & EDIT ---
   const [selectedTeamYear, setSelectedTeamYear] = useState('All');
 
@@ -20,9 +23,13 @@ export default function Admin() {
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState(null);
 
-  // Edit State untuk Team (BARU)
+  // Edit State untuk Team
   const [editTeamMode, setEditTeamMode] = useState(false);
   const [editTeamData, setEditTeamData] = useState(null);
+
+  // Edit State untuk Berita (BARU)
+  const [editNewsMode, setEditNewsMode] = useState(false);
+  const [editNewsData, setEditNewsData] = useState(null);
 
   const navigate = useNavigate();
   const API = 'http://127.0.0.1:5000';
@@ -37,6 +44,7 @@ export default function Admin() {
     axios.get(`${API}/api/team`).then((res) => setTeamList(res.data));
     axios.get(`${API}/api/gallery/events`).then((res) => setEvents(res.data));
     axios.get(`${API}/api/achievements`).then((res) => setAchievements(res.data));
+    axios.get(`${API}/api/news`).then((res) => setNewsList(res.data)); // <-- FETCH BERITA
     axios.get(`${API}/api/config`).then((res) =>
       setConfig({
         start_date: res.data.start,
@@ -60,6 +68,18 @@ export default function Admin() {
     }
   };
 
+  // FUNGSI BARU: DELETE NEWS
+  const handleDeleteNews = async (id) => {
+    if (confirm('Yakin hapus berita ini?')) {
+      try {
+        await axios.delete(`${API}/api/admin/news/delete/${id}`);
+        fetchData();
+      } catch (error) {
+        alert('Gagal menghapus berita.');
+      }
+    }
+  };
+
   const handleUpload = async (e, type) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -71,12 +91,18 @@ export default function Admin() {
         setEditMode(false);
         setEditData(null);
       } else if (type === 'Tim' && editTeamMode) {
-        // LOGIC UPDATE TEAM BARU
         formData.append('id', editTeamData.id);
         await axios.post(`${API}/api/admin/team/update`, formData);
         alert('Data Tim Berhasil Diupdate!');
         setEditTeamMode(false);
         setEditTeamData(null);
+      } else if (type === 'Berita' && editNewsMode) {
+        // LOGIC UPDATE BERITA
+        formData.append('id', editNewsData.id);
+        await axios.post(`${API}/api/admin/news/update`, formData);
+        alert('Berita Berhasil Diupdate!');
+        setEditNewsMode(false);
+        setEditNewsData(null);
       } else {
         await axios.post(`${API}/admin/upload`, formData);
         alert(`Data ${type} Berhasil Disimpan!`);
@@ -423,24 +449,29 @@ export default function Admin() {
             </motion.div>
           )}
 
+          {/* --- TAB BERITA (UPDATED: FORM + LIST) --- */}
           {activeTab === 'berita' && (
             <motion.div key="berita" variants={pageVariant} initial="hidden" animate="visible" exit="exit">
-              <h3 className="fw-bold mb-4">Posting Berita Baru</h3>
-              <div className="card border-0 shadow-sm p-4 rounded-4">
-                <form onSubmit={(e) => handleUpload(e, 'Berita')}>
+              <h3 className="fw-bold mb-4">Manajemen Berita</h3>
+
+              <div className={`card border-0 shadow-sm p-4 rounded-4 mb-4 ${editNewsMode ? 'border-warning border border-2' : ''}`}>
+                {/* FORM INPUT BERITA */}
+                <h5 className={`fw-bold mb-3 ${editNewsMode ? 'text-warning' : 'text-dark'}`}>{editNewsMode ? 'Edit Berita' : 'Posting Berita Baru'}</h5>
+                <form key={editNewsData ? editNewsData.id : 'new'} onSubmit={(e) => handleUpload(e, 'Berita')}>
                   <input type="hidden" name="add_news" value="1" />
                   <div className="mb-3">
                     <label className="fw-bold">Judul</label>
-                    <input type="text" name="title" className="form-control" required />
+                    <input type="text" name="title" className="form-control" defaultValue={editNewsData?.title || ''} required />
                   </div>
                   <div className="mb-3">
-                    <label className="fw-bold">Isi</label>
-                    <textarea name="content" className="form-control" rows="6" required></textarea>
+                    <label className="fw-bold">Isi Berita</label>
+                    <textarea name="content" className="form-control" rows="6" defaultValue={editNewsData?.content || ''} required></textarea>
                   </div>
                   <div className="row g-3">
                     <div className="col-md-4">
                       <label>Thumbnail</label>
                       <input type="file" name="thumbnail" className="form-control" />
+                      {editNewsMode && <small className="text-muted">Biarkan kosong jika tidak diganti</small>}
                     </div>
                     <div className="col-md-4">
                       <label>Dokumen</label>
@@ -448,11 +479,78 @@ export default function Admin() {
                     </div>
                     <div className="col-md-4">
                       <label>Link</label>
-                      <input type="text" name="link" className="form-control" />
+                      <input type="text" name="link" className="form-control" defaultValue={editNewsData?.link || ''} />
                     </div>
                   </div>
-                  <button className="btn btn-primary w-100 mt-4 fw-bold py-2">PUBLISH</button>
+                  <div className="d-flex gap-2 mt-4">
+                    <button className={`btn w-100 fw-bold py-2 ${editNewsMode ? 'btn-warning' : 'btn-primary'}`}>{editNewsMode ? 'UPDATE BERITA' : 'PUBLISH'}</button>
+                    {editNewsMode && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary px-4"
+                        onClick={() => {
+                          setEditNewsMode(false);
+                          setEditNewsData(null);
+                          document.querySelector('form').reset();
+                        }}
+                      >
+                        Batal
+                      </button>
+                    )}
+                  </div>
                 </form>
+              </div>
+
+              {/* LIST BERITA */}
+              <div className="card border-0 shadow-sm p-4 rounded-4">
+                <h5 className="fw-bold mb-3">Daftar Berita Terpublis</h5>
+                <div className="table-responsive" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                  <table className="table table-hover align-middle">
+                    <thead className="table-light sticky-top">
+                      <tr>
+                        <th>Tanggal</th>
+                        <th>Judul</th>
+                        <th>Preview</th>
+                        <th>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {newsList.map((n) => (
+                        <tr key={n.id}>
+                          <td>
+                            <span className="badge bg-secondary">{n.date}</span>
+                          </td>
+                          <td>
+                            <strong>{n.title}</strong>
+                          </td>
+                          <td>{n.thumbnail ? <img src={`${API}/uploads/news_thumb/${n.thumbnail}`} width="50" className="rounded" /> : '-'}</td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-warning me-1"
+                              onClick={() => {
+                                setEditNewsMode(true);
+                                setEditNewsData(n);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                            >
+                              <i className="bi bi-pencil-square"></i>
+                            </button>
+                            <button className="btn btn-sm btn-danger" onClick={() => handleDeleteNews(n.id)}>
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {newsList.length === 0 && (
+                        <tr>
+                          <td colSpan="4" className="text-center text-muted py-3">
+                            Belum ada berita.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </motion.div>
           )}
