@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import SpotlightCard from '../components/SpotlightCard';
 
 export default function NewsDetail() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ export default function NewsDetail() {
           &larr; Kembali
         </Link>
 
-        <div className="card border-0 shadow-lg rounded-4 overflow-hidden bg-dark text-white">
+        <SpotlightCard className="card border-0 shadow-lg rounded-4 overflow-hidden text-white">
           {/* Tampilkan Thumbnail jika ada */}
           {news.thumbnail && <img src={`${API}/uploads/news_thumb/${news.thumbnail}`} className="w-100" style={{ maxHeight: '500px', objectFit: 'cover' }} alt={news.title} />}
 
@@ -54,7 +55,7 @@ export default function NewsDetail() {
               </div>
             )}
           </div>
-        </div>
+        </SpotlightCard>
       </div>
     </div>
   );

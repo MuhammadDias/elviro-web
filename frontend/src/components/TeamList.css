@@ -1,0 +1,48 @@
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Default Mobile: 2 kolom */
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .team-grid {
+    grid-template-columns: repeat(3, 1fr); /* Tablet: 3 kolom */
+  }
+}
+
+@media (min-width: 1200px) {
+  .team-grid {
+    grid-template-columns: repeat(5, 1fr); /* Desktop: 5 kolom sesuai request */
+  }
+}
+
+.team-card-square {
+  aspect-ratio: 1 / 1; /* Membuat kartu kotak presisi */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.team-card-square:hover {
+  transform: translateY(-5px); /* Efek naik saat di-hover */
+}
+
+.team-photo-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  opacity: 0.6; /* Agak gelap agar teks terbaca */
+  transition: transform 0.5s ease, opacity 0.3s ease;
+}
+
+.team-card-square:hover .team-photo-bg {
+  transform: scale(1.1); /* Efek zoom in gambar */
+  opacity: 0.9; /* Gambar jadi lebih terang */
+}

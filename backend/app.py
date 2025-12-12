@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory, send_file, sessi
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime, date
+from sqlalchemy import text
 
 app = Flask(__name__)
 app.secret_key = 'elviro_secret_key_rahasia'
@@ -49,6 +50,7 @@ class Team(db.Model):
     nrp = db.Column(db.String(50))
     major = db.Column(db.String(100))
     batch = db.Column(db.String(20))
+    division = db.Column(db.String(100)) # KOLOM BARU: DIVISI
     show_on_home = db.Column(db.Boolean, default=False) 
 
 class News(db.Model):
@@ -89,7 +91,7 @@ def get_team():
     only_home = request.args.get('home')
     if only_home: team = Team.query.filter_by(show_on_home=True).all()
     else: team = Team.query.order_by(Team.period.desc()).all()
-    return jsonify([{ 'id': t.id, 'name': t.name, 'position': t.position, 'photo': t.photo, 'nrp': t.nrp, 'major': t.major, 'batch': t.batch, 'period': t.period, 'show_on_home': t.show_on_home } for t in team])
+    return jsonify([{ 'id': t.id, 'name': t.name, 'position': t.position, 'division': t.division, 'photo': t.photo, 'nrp': t.nrp, 'major': t.major, 'batch': t.batch, 'period': t.period, 'show_on_home': t.show_on_home } for t in team])
 
 @app.route('/api/admin/team/update', methods=['POST'])
 def update_team():
@@ -104,6 +106,7 @@ def update_team():
         t.nrp = request.form['nrp']
         t.major = request.form['major']
         t.batch = request.form['batch']
+        t.division = request.form.get('division') # Update divisi
 
         if 'photo' in request.files:
             p = request.files['photo']
@@ -165,7 +168,7 @@ def get_news_list():
     news = News.query.order_by(News.date.desc()).all()
     return jsonify([{
         'id': n.id, 'title': n.title, 
-        'summary': n.summary, # Penting untuk Home
+        'summary': n.summary if n.summary else ((n.content[:150] + '...') if n.content and len(n.content) > 150 else (n.content or "")),
         'content': n.content,
         'date': n.date.strftime('%d %B %Y'), 
         'thumbnail': n.thumbnail, 
@@ -179,7 +182,7 @@ def get_news_detail(id):
     if not n: return jsonify({'error': 'Not Found'}), 404
     return jsonify({
         'id': n.id, 'title': n.title, 'content': n.content, 
-        'summary': n.summary,
+        'summary': n.summary if n.summary else ((n.content[:150] + '...') if n.content and len(n.content) > 150 else (n.content or "")),
         'date': n.date.strftime('%d %B %Y'), 
         'thumbnail': n.thumbnail, 'document': n.document, 'link': n.link
     })
@@ -268,7 +271,7 @@ def admin_upload():
     try:
         if 'add_team' in request.form:
             p = request.files['photo']; p.save(os.path.join(app.config['UPLOAD_FOLDER'], 'team', p.filename))
-            db.session.add(Team(name=request.form['name'], position=request.form['position'], period=request.form['period'], photo=p.filename, nrp=request.form['nrp'], major=request.form['major'], batch=request.form['batch']))
+            db.session.add(Team(name=request.form['name'], position=request.form['position'], division=request.form.get('division'), period=request.form['period'], photo=p.filename, nrp=request.form['nrp'], major=request.form['major'], batch=request.form['batch']))
         
         elif 'add_news' in request.form:
             t = request.files.get('thumbnail'); d = request.files.get('document'); tn = t.filename if t else None; dn = d.filename if d else None
@@ -333,8 +336,44 @@ def seed_data():
             db.session.add(Achievement(year=d['year'], event=d['event'], category=d['category'], result=d['result'], description=d['desc'], photo="default.jpg"))
     db.session.commit()
 
+def fix_schema():
+    """Memastikan kolom summary ada di database (Migrasi Manual Otomatis)"""
+    try:
+        # Cek apakah kolom summary bisa di-query. Jika error, berarti belum ada.
+        db.session.execute(text("SELECT summary FROM news LIMIT 1"))
+    except Exception:
+        db.session.rollback()
+        print("Kolom 'summary' tidak ditemukan. Melakukan migrasi database...")
+        try:
+            db.session.execute(text("ALTER TABLE news ADD COLUMN summary VARCHAR(300)"))
+            db.session.commit()
+            print("Migrasi berhasil: Kolom 'summary' ditambahkan.")
+        except Exception as e:
+            print(f"Gagal migrasi News: {e}")
+
+    try:
+        # Cek apakah kolom division ada di tabel team
+        db.session.execute(text("SELECT division FROM team LIMIT 1"))
+    except Exception:
+        db.session.rollback()
+        print("Kolom 'division' tidak ditemukan pada tabel Team. Melakukan migrasi...")
+        try:
+            db.session.execute(text("ALTER TABLE team ADD COLUMN division VARCHAR(100)"))
+            db.session.commit()
+            print("Migrasi berhasil: Kolom 'division' ditambahkan.")
+        except Exception as e:
+            print(f"Gagal migrasi Team: {e}")
+
+    try:
+        # FIX: Pastikan data lama muncul di home (set show_on_home = 1 jika NULL)
+        db.session.execute(text("UPDATE team SET show_on_home = 1 WHERE show_on_home IS NULL"))
+        db.session.commit()
+    except Exception as e:
+        print(f"Gagal update data lama: {e}")
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        fix_schema() # Jalankan perbaikan schema sebelum aplikasi jalan
         seed_data()
     app.run(debug=True, port=5000)
