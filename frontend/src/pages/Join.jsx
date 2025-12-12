@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 export default function Join() {
   const [config, setConfig] = useState(null);
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false); // Tambahan: Loading state agar user tau sedang proses
+  
   const [formData, setFormData] = useState({
     name: '',
     nrp: '',
@@ -19,7 +21,14 @@ export default function Join() {
   });
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:5000/api/config').then((res) => setConfig(res.data));
+    // Ambil config menggunakan path relatif
+    axios.get('/api/config')
+      .then((res) => setConfig(res.data))
+      .catch((err) => {
+        console.error("Gagal mengambil config:", err);
+        // Default config jika error agar tidak blank
+        setConfig({ is_open: false, message: "Gagal terhubung ke server." });
+      });
   }, []);
 
   const handleChange = (e) => {
@@ -28,16 +37,36 @@ export default function Join() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Mulai loading
+
     const data = new FormData();
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
-    data.append('cv', file);
+    
+    // Pastikan file ada sebelum dikirim
+    if (file) {
+      data.append('cv', file);
+    }
 
     try {
-      await axios.post('http://127.0.0.1:5000/api/join', data);
+      // PERBAIKAN UTAMA: Gunakan path '/api/join' (bukan http://127.0.0.1:5000)
+      // Ini wajib agar request melewati Proxy Vite/Cloudflare
+      await axios.post('/api/join', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
       alert('Pendaftaran Berhasil Terkirim!');
       window.location.href = '/';
+      
     } catch (error) {
-      alert('Gagal mengirim data. Pastikan semua file terisi.');
+      console.error("Error submit:", error); // Cek detail error di Console (F12)
+      
+      // Tampilkan pesan error yang lebih spesifik jika ada respon dari backend
+      const serverMessage = error.response?.data?.message || 'Gagal mengirim data. Pastikan semua file terisi dan server menyala.';
+      alert(serverMessage);
+    } finally {
+      setLoading(false); // Selesai loading
     }
   };
 
@@ -130,8 +159,15 @@ export default function Join() {
                   </div>
                 </div>
 
-                <button className="btn btn-warning w-100 py-3 fw-bold shadow-sm hover-scale">
-                  KIRIM PENDAFTARAN <i className="bi bi-send-fill ms-2"></i>
+                <button 
+                  className="btn btn-warning w-100 py-3 fw-bold shadow-sm hover-scale" 
+                  disabled={loading} // Disable tombol saat loading
+                >
+                  {loading ? (
+                    <span><span className="spinner-border spinner-border-sm me-2"></span>Mengirim...</span>
+                  ) : (
+                    <span>KIRIM PENDAFTARAN <i className="bi bi-send-fill ms-2"></i></span>
+                  )}
                 </button>
               </form>
             </div>

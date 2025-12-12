@@ -7,12 +7,13 @@ export default function TeamList() {
   const [team, setTeam] = useState([]);
   const [filter, setFilter] = useState('All');
   const [divisions, setDivisions] = useState([]);
-  const API = 'http://127.0.0.1:5000';
+  // const API = 'http://127.0.0.1:5000';
+
 
   useEffect(() => {
     // Ambil data team yang diflag show_on_home=True
     axios
-      .get(`${API}/api/team?home=true`)
+      .get(`/api/team?home=true`)
       .then((res) => {
         setTeam(res.data);
         // Ambil daftar divisi unik dari data yang ada

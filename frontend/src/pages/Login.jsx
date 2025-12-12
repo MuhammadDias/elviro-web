@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 
-const API = 'http://127.0.0.1:5000';
+// const API = 'http://127.0.0.1:5000';
 
 export default function Login() {
   const [input, setInput] = useState({ username: '', password: '' });
@@ -11,7 +11,8 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${API}/api/login`, input);
+      // const res = await axios.post(`${API}/api/login`, input);
+      const res = await axios.post('/api/login', input);
       if (res.data.success) {
         localStorage.setItem('isAdmin', 'true'); // Simpan status login
         navigate('/admin');

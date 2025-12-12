@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime, date
 from sqlalchemy import text
+from werkzeug.security import generate_password_hash, check_password_hash # <-- TAMBAHAN IMPORT PENTING
 
 app = Flask(__name__)
 app.secret_key = 'elviro_secret_key_rahasia'
@@ -20,6 +21,13 @@ for folder in ['cv', 'team', 'news_thumb', 'news_doc', 'gallery_thumb', 'gallery
 db = SQLAlchemy(app)
 
 # --- MODELS ---
+
+# 1. MODEL ADMIN (BARU - UNTUK LOGIN & SIGNUP)
+class Admin(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False) # Password akan di-hash
+
 class RecruitmentConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_date = db.Column(db.Date)
@@ -50,14 +58,14 @@ class Team(db.Model):
     nrp = db.Column(db.String(50))
     major = db.Column(db.String(100))
     batch = db.Column(db.String(20))
-    division = db.Column(db.String(100)) # KOLOM BARU: DIVISI
+    division = db.Column(db.String(100))
     show_on_home = db.Column(db.Boolean, default=False) 
 
 class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200))
     content = db.Column(db.Text)
-    summary = db.Column(db.String(300), nullable=True) # KOLOM BARU: RINGKASAN
+    summary = db.Column(db.String(300), nullable=True)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     thumbnail = db.Column(db.String(200))
     document = db.Column(db.String(200))
@@ -86,6 +94,49 @@ class Achievement(db.Model):
 
 # --- API ROUTES ---
 
+# 2. ROUTE SIGNUP (BARU)
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'success': False, 'message': 'Username dan Password wajib diisi'}), 400
+
+    # Cek apakah username sudah ada
+    if Admin.query.filter_by(username=username).first():
+        return jsonify({'success': False, 'message': 'Username sudah digunakan'}), 400
+
+    # Hash password sebelum simpan
+    hashed_password = generate_password_hash(password)
+    
+    new_admin = Admin(username=username, password=hashed_password)
+    db.session.add(new_admin)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Admin berhasil didaftarkan'})
+
+# 3. ROUTE LOGIN (DIUPDATE KE DATABASE)
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    # Cek database
+    user = Admin.query.filter_by(username=username).first()
+
+    # Validasi password hash
+    if user and check_password_hash(user.password, password):
+        return jsonify({'success': True})
+    
+    # Fallback untuk login admin lama (hardcoded) jika database kosong/belum migrasi
+    if username == 'admin' and password == 'elviro123':
+         return jsonify({'success': True})
+
+    return jsonify({'success': False, 'message': 'Username atau Password salah'}), 401
+
 @app.route('/api/team')
 def get_team():
     only_home = request.args.get('home')
@@ -106,7 +157,7 @@ def update_team():
         t.nrp = request.form['nrp']
         t.major = request.form['major']
         t.batch = request.form['batch']
-        t.division = request.form.get('division') # Update divisi
+        t.division = request.form.get('division')
 
         if 'photo' in request.files:
             p = request.files['photo']
@@ -160,11 +211,8 @@ def delete_achievement(id):
     if a: db.session.delete(a); db.session.commit(); return jsonify({'success': True})
     return jsonify({'error': 'Not found'}), 404
 
-# --- API NEWS (GET, DETAIL, UPDATE, DELETE) ---
-
 @app.route('/api/news', methods=['GET'])
 def get_news_list():
-    # Ambil semua berita
     news = News.query.order_by(News.date.desc()).all()
     return jsonify([{
         'id': n.id, 'title': n.title, 
@@ -194,7 +242,7 @@ def update_news():
         if not n: return jsonify({'error': 'Not Found'}), 404
         
         n.title = request.form['title']
-        n.summary = request.form.get('summary', '') # Update summary juga
+        n.summary = request.form.get('summary', '')
         n.content = request.form['content']
         n.link = request.form['link']
         
@@ -222,8 +270,6 @@ def delete_news(id):
         db.session.commit()
         return jsonify({'success': True})
     return jsonify({'error': 'Not found'}), 404
-
-# --- END API NEWS ---
 
 @app.route('/api/gallery/events')
 def get_events(): return jsonify([{'id': e.id, 'title': e.title, 'year': e.year, 'location': e.location, 'thumbnail': e.thumbnail} for e in GalleryEvent.query.all()])
@@ -263,9 +309,6 @@ def delete_applicant(id):
     if a: db.session.delete(a); db.session.commit(); return jsonify({'success': True})
     return jsonify({'error': 'Not found'}), 404
 
-@app.route('/api/login', methods=['POST'])
-def login(): return jsonify({'success': True}) if request.json['username']=='admin' and request.json['password']=='elviro123' else jsonify({'success': False}), 401
-
 @app.route('/admin/upload', methods=['POST'])
 def admin_upload():
     try:
@@ -278,15 +321,13 @@ def admin_upload():
             if t: t.save(os.path.join(app.config['UPLOAD_FOLDER'], 'news_thumb', tn))
             if d: d.save(os.path.join(app.config['UPLOAD_FOLDER'], 'news_doc', dn))
             
-            # FITUR BARU: GENERATE SUMMARY OTOMATIS JIKA KOSONG
-            # Ambil 150 karakter pertama dari konten untuk summary
             content_text = request.form['content']
             summary_text = content_text[:150] + "..." if len(content_text) > 150 else content_text
             
             db.session.add(News(
                 title=request.form['title'], 
                 content=content_text, 
-                summary=summary_text, # Simpan summary
+                summary=summary_text, 
                 thumbnail=tn, 
                 document=dn, 
                 link=request.form['link']
@@ -316,12 +357,11 @@ def export_excel():
     else: df = pd.DataFrame(data)
     fn = 'Data_Pendaftar_ELVIRO.xlsx'; out = os.path.join(app.config['UPLOAD_FOLDER'], fn); df.to_excel(out, index=False); return send_file(out, as_attachment=True, download_name=fn)
 
-# --- FUNGSI SEED (ISI DATA OTOMATIS SAAT RESET) ---
+# --- FUNGSI SEED & FIX SCHEMA ---
 def seed_data():
     if not RecruitmentConfig.query.first():
         db.session.add(RecruitmentConfig(start_date=date.today(), end_date=date.today(), closed_message="Closed."))
     
-    # KEMBALIKAN DATA ACHIEVEMENT LAMA
     if not Achievement.query.first():
         data = [
             {"year": 2024, "event": "KMHE 2024", "category": "Prototype Listrik", "result": "Best Tech Report & Finalist", "desc": "Penghargaan laporan teknis terbaik."},
@@ -337,43 +377,44 @@ def seed_data():
     db.session.commit()
 
 def fix_schema():
-    """Memastikan kolom summary ada di database (Migrasi Manual Otomatis)"""
+    # Cek & Tambah Tabel Admin jika belum ada
     try:
-        # Cek apakah kolom summary bisa di-query. Jika error, berarti belum ada.
+        db.session.execute(text("SELECT username FROM admin LIMIT 1"))
+    except Exception:
+        db.session.rollback()
+        print("Tabel Admin tidak ditemukan. Membuat tabel...")
+        db.create_all() # Ini akan membuat tabel Admin karena class Admin sudah didefinisikan
+
+    # Cek kolom summary di News
+    try:
         db.session.execute(text("SELECT summary FROM news LIMIT 1"))
     except Exception:
         db.session.rollback()
-        print("Kolom 'summary' tidak ditemukan. Melakukan migrasi database...")
+        print("Kolom 'summary' tidak ditemukan. Migrasi database...")
         try:
             db.session.execute(text("ALTER TABLE news ADD COLUMN summary VARCHAR(300)"))
             db.session.commit()
-            print("Migrasi berhasil: Kolom 'summary' ditambahkan.")
-        except Exception as e:
-            print(f"Gagal migrasi News: {e}")
+        except Exception as e: print(f"Gagal migrasi News: {e}")
 
+    # Cek kolom division di Team
     try:
-        # Cek apakah kolom division ada di tabel team
         db.session.execute(text("SELECT division FROM team LIMIT 1"))
     except Exception:
         db.session.rollback()
-        print("Kolom 'division' tidak ditemukan pada tabel Team. Melakukan migrasi...")
+        print("Kolom 'division' tidak ditemukan. Migrasi database...")
         try:
             db.session.execute(text("ALTER TABLE team ADD COLUMN division VARCHAR(100)"))
             db.session.commit()
-            print("Migrasi berhasil: Kolom 'division' ditambahkan.")
-        except Exception as e:
-            print(f"Gagal migrasi Team: {e}")
+        except Exception as e: print(f"Gagal migrasi Team: {e}")
 
     try:
-        # FIX: Pastikan data lama muncul di home (set show_on_home = 1 jika NULL)
         db.session.execute(text("UPDATE team SET show_on_home = 1 WHERE show_on_home IS NULL"))
         db.session.commit()
-    except Exception as e:
-        print(f"Gagal update data lama: {e}")
+    except Exception as e: print(f"Gagal update data lama: {e}")
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        fix_schema() # Jalankan perbaikan schema sebelum aplikasi jalan
+        fix_schema()
         seed_data()
     app.run(debug=True, port=5000)
