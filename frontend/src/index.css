@@ -205,3 +205,70 @@ body,
     color: var(--elviro-yellow) !important;
   }
 }
+
+/* --- 8. FOOTER STYLES --- */
+footer {
+  background: linear-gradient(135deg, var(--elviro-blue) 0%, #1e293b 100%);
+}
+
+.footer-brand h5 {
+  font-size: 1.5rem;
+  margin-bottom: 0;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.contact-item:hover {
+  transform: translateX(5px);
+}
+
+.contact-item a:hover {
+  color: var(--elviro-yellow) !important;
+  transition: color 0.3s ease;
+}
+
+.social-links a {
+  transition: all 0.3s ease;
+  padding: 5px 0;
+}
+
+.social-links a:hover {
+  transform: translateX(5px);
+  color: var(--elviro-yellow) !important;
+}
+
+.footer-links a {
+  transition: all 0.3s ease;
+  padding: 5px 0;
+}
+
+.footer-links a:hover {
+  color: var(--elviro-yellow) !important;
+  transform: translateX(5px);
+}
+
+.license-info {
+  font-size: 0.9rem;
+}
+
+/* Footer responsive adjustments */
+@media (max-width: 768px) {
+  footer .col-md-6 {
+    text-align: center !important;
+    margin-bottom: 1rem;
+  }
+
+  .footer-brand {
+    text-align: center;
+  }
+
+  .contact-item,
+  .social-links a,
+  .footer-links a {
+    justify-content: center;
+  }
+}

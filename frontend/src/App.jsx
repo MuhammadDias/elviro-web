@@ -4,6 +4,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 import SplashCursor from './components/SplashCursor';
+import Footer from './components/Footer';
 
 // --- IMPORT ASET LOGO ---
 import LogoIcon from './Asset 5@4x.png';
@@ -33,12 +34,7 @@ function App() {
   return (
     <>
       {/* 1. ANIMASI SPLASH CURSOR */}
-      <SplashCursor
-        SIM_RESOLUTION={64}
-        DYE_RESOLUTION={512}
-        PRESSURE_ITERATIONS={10}
-        DENSITY_DISSIPATION={3}
-      />
+      <SplashCursor SIM_RESOLUTION={64} DYE_RESOLUTION={512} PRESSURE_ITERATIONS={10} DENSITY_DISSIPATION={3} />
 
       {/* 2. KONTEN UTAMA */}
       <div
@@ -54,7 +50,6 @@ function App() {
         {!hideNavbar && (
           <nav className="navbar navbar-expand-lg navbar-dark bg-elviro-blue sticky-top p-3 shadow">
             <div className="container">
-              
               {/* --- GANTI LOGO BARU DI SINI (CUMA GAMBAR ASSET 5) --- */}
               <Link className="navbar-brand d-flex align-items-center" to="/">
                 <img
@@ -62,7 +57,7 @@ function App() {
                   alt="ELVIRO Icon"
                   style={{
                     height: '30px', // Ukuran disesuaikan agar pas karena sendirian
-                    objectFit: 'contain'
+                    objectFit: 'contain',
                     // Filter dihapus agar warna asli muncul
                   }}
                 />
@@ -141,11 +136,7 @@ function App() {
           </Routes>
         </div>
 
-        {!hideNavbar && (
-          <footer className="bg-elviro-blue text-white text-center py-4 mt-auto">
-            <p className="mb-0">&copy; 2025 ELVIRO Electric Prototype Car Team.</p>
-          </footer>
-        )}
+        {!hideNavbar && <Footer />}
       </div>
     </>
   );
